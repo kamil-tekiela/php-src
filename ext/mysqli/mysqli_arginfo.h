@@ -1,5 +1,5 @@
 /* This is a generated file, edit the .stub.php file instead.
- * Stub hash: b9583854314bc54295c1e1a4ec7f6b8c0ce6187c */
+ * Stub hash: 744c59d0ae28d46f99e478c903cdf9741f97d134 */
 
 ZEND_BEGIN_ARG_WITH_RETURN_TYPE_MASK_EX(arginfo_mysqli_affected_rows, 0, 1, MAY_BE_LONG|MAY_BE_STRING)
 	ZEND_ARG_OBJ_INFO(0, mysql, mysqli, 0)
@@ -113,6 +113,11 @@ ZEND_BEGIN_ARG_WITH_RETURN_TYPE_MASK_EX(arginfo_mysqli_fetch_object, 0, 1, MAY_B
 ZEND_END_ARG_INFO()
 
 #define arginfo_mysqli_fetch_row arginfo_mysqli_fetch_assoc
+
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_MASK_EX(arginfo_mysqli_fetch_column, 0, 1, MAY_BE_NULL|MAY_BE_LONG|MAY_BE_STRING|MAY_BE_FALSE)
+	ZEND_ARG_OBJ_INFO(0, result, mysqli_result, 0)
+	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, column, IS_LONG, 0, "0")
+ZEND_END_ARG_INFO()
 
 #define arginfo_mysqli_field_count arginfo_mysqli_errno
 
@@ -606,6 +611,10 @@ ZEND_END_ARG_INFO()
 
 #define arginfo_class_mysqli_result_fetch_row arginfo_class_mysqli_character_set_name
 
+ZEND_BEGIN_ARG_WITH_RETURN_TYPE_MASK_EX(arginfo_class_mysqli_result_fetch_column, 0, 0, MAY_BE_NULL|MAY_BE_LONG|MAY_BE_STRING|MAY_BE_FALSE)
+	ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(0, column, IS_LONG, 0, "0")
+ZEND_END_ARG_INFO()
+
 #define arginfo_class_mysqli_result_field_seek arginfo_class_mysqli_result_fetch_field_direct
 
 #define arginfo_class_mysqli_result_free_result arginfo_class_mysqli_character_set_name
@@ -704,6 +713,7 @@ ZEND_FUNCTION(mysqli_fetch_array);
 ZEND_FUNCTION(mysqli_fetch_assoc);
 ZEND_FUNCTION(mysqli_fetch_object);
 ZEND_FUNCTION(mysqli_fetch_row);
+ZEND_FUNCTION(mysqli_fetch_column);
 ZEND_FUNCTION(mysqli_field_count);
 ZEND_FUNCTION(mysqli_field_seek);
 ZEND_FUNCTION(mysqli_field_tell);
@@ -828,6 +838,7 @@ static const zend_function_entry ext_functions[] = {
 	ZEND_FE(mysqli_fetch_assoc, arginfo_mysqli_fetch_assoc)
 	ZEND_FE(mysqli_fetch_object, arginfo_mysqli_fetch_object)
 	ZEND_FE(mysqli_fetch_row, arginfo_mysqli_fetch_row)
+	ZEND_FE(mysqli_fetch_column, arginfo_mysqli_fetch_column)
 	ZEND_FE(mysqli_field_count, arginfo_mysqli_field_count)
 	ZEND_FE(mysqli_field_seek, arginfo_mysqli_field_seek)
 	ZEND_FE(mysqli_field_tell, arginfo_mysqli_field_tell)
@@ -993,6 +1004,7 @@ static const zend_function_entry class_mysqli_result_methods[] = {
 	ZEND_ME_MAPPING(fetch_assoc, mysqli_fetch_assoc, arginfo_class_mysqli_result_fetch_assoc, ZEND_ACC_PUBLIC)
 	ZEND_ME_MAPPING(fetch_object, mysqli_fetch_object, arginfo_class_mysqli_result_fetch_object, ZEND_ACC_PUBLIC)
 	ZEND_ME_MAPPING(fetch_row, mysqli_fetch_row, arginfo_class_mysqli_result_fetch_row, ZEND_ACC_PUBLIC)
+	ZEND_ME_MAPPING(fetch_column, mysqli_fetch_column, arginfo_class_mysqli_result_fetch_column, ZEND_ACC_PUBLIC)
 	ZEND_ME_MAPPING(field_seek, mysqli_field_seek, arginfo_class_mysqli_result_field_seek, ZEND_ACC_PUBLIC)
 	ZEND_ME_MAPPING(free_result, mysqli_free_result, arginfo_class_mysqli_result_free_result, ZEND_ACC_PUBLIC)
 	ZEND_ME(mysqli_result, getIterator, arginfo_class_mysqli_result_getIterator, ZEND_ACC_PUBLIC)
