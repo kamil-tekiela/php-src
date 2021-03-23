@@ -121,7 +121,7 @@ int(1)
 [008]
 mysqli_fetch_column(): Argument #2 ($column) must be greater than or equal to 0
 [009]
-Invalid column index
+mysqli_fetch_column(): Argument #2 ($column) must be less than the number of fields for this result set
 mysqli_result object is already closed
 [010]
 int(1)

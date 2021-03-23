@@ -453,8 +453,8 @@ PHP_FUNCTION(mysqli_fetch_column)
 		zend_argument_value_error(ERROR_ARG_POS(2), "must be greater than or equal to 0");
 		RETURN_THROWS();
 	}
-	if(col_no >= result->field_count) {
-		zend_value_error("Invalid column index");
+	if (col_no >= mysql_num_fields(result)) {
+		zend_argument_value_error(ERROR_ARG_POS(2), "must be less than the number of fields for this result set");
 		RETURN_THROWS();
 	}
 
