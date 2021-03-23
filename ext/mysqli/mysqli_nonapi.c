@@ -450,7 +450,7 @@ PHP_FUNCTION(mysqli_fetch_column)
 	MYSQLI_FETCH_RESOURCE(result, MYSQL_RES *, mysql_result, "mysqli_result", MYSQLI_STATUS_VALID);
 
 	if(col_no < 0) {
-		zend_value_error("Column index must be greater than or equal to 0");
+		zend_argument_value_error(ERROR_ARG_POS(2), "must be greater than or equal to 0");
 		RETURN_THROWS();
 	}
 	if(col_no >= result->field_count) {

@@ -119,7 +119,7 @@ NULL
 [007]
 int(1)
 [008]
-Column index must be greater than or equal to 0
+mysqli_fetch_column(): Argument #2 ($column) must be greater than or equal to 0
 [009]
 Invalid column index
 mysqli_result object is already closed
