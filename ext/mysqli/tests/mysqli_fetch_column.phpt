@@ -1,5 +1,5 @@
 --TEST--
-mysqli_fetch_assoc()
+mysqli_fetch_column()
 --SKIPIF--
 <?php
 require_once 'skipif.inc';

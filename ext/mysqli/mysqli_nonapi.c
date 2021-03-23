@@ -447,9 +447,9 @@ PHP_FUNCTION(mysqli_fetch_column)
 	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "O|l", &mysql_result, mysqli_result_class_entry, &col_no) == FAILURE) {
 		RETURN_THROWS();
 	}
-	MYSQLI_FETCH_RESOURCE(result, MYSQL_RES *, mysql_result, "mysqli_result", MYSQLI_STATUS_VALID);
+	MYSQLI_FETCH_RESOURCE(result, MYSQL_RES*, mysql_result, "mysqli_result", MYSQLI_STATUS_VALID);
 
-	if(col_no < 0) {
+	if (col_no < 0) {
 		zend_argument_value_error(ERROR_ARG_POS(2), "must be greater than or equal to 0");
 		RETURN_THROWS();
 	}
@@ -460,12 +460,12 @@ PHP_FUNCTION(mysqli_fetch_column)
 
 	php_mysqli_fetch_into_hash_aux(&row_array, result, MYSQLI_NUM);
 	if (Z_TYPE(row_array) != IS_ARRAY) {
-		zval_ptr_dtor(&row_array);
+		zval_ptr_dtor_nogc(&row_array);
 		RETURN_FALSE;
 	}
 
-	ZVAL_COPY(return_value, zend_hash_index_find(Z_ARR(row_array), col_no));
-	zval_ptr_dtor(&row_array);
+	ZVAL_COPY_VALUE(return_value, zend_hash_index_find(Z_ARR(row_array), col_no));
+	zval_ptr_dtor_nogc(&row_array);
 }
 /* }}} */
 
