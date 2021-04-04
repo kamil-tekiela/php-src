@@ -498,6 +498,12 @@ PHP_FUNCTION(mysqli_fetch_all)
 		}
 		add_index_zval(return_value, i++, &row);
 	} while (1);
+
+	if (mysqli_result_is_unbuffered(result)) {
+		php_error_docref(NULL, E_WARNING, "Data fetched with MYSQLI_USE_RESULT can be iterated only once");
+	} else {
+		mysql_data_seek(result, 0);
+	}
 }
 /* }}} */
 
