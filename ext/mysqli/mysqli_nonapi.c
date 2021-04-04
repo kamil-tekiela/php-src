@@ -472,33 +472,57 @@ PHP_FUNCTION(mysqli_fetch_column)
 /* {{{ Fetches all result rows as an associative array, a numeric array, or both */
 PHP_FUNCTION(mysqli_fetch_all)
 {
-	MYSQL_RES	*result;
-	zval		*mysql_result;
-	zend_long	mode = MYSQLI_NUM;
-	zval		*argument = NULL;
-	zend_long	col_no = 0;
+	MYSQL_RES			*result;
+	zval				*mysql_result;
+	zend_long			mode = MYSQLI_NUM;
+	zval				*argument = NULL;
+	zend_long			col_no = 0;
+	zend_class_entry 	*ce = NULL;
+	zend_long			fetchtype;
 
 	if (zend_parse_method_parameters(ZEND_NUM_ARGS(), getThis(), "O|lz", &mysql_result, mysqli_result_class_entry, &mode, &argument) == FAILURE) {
 		RETURN_THROWS();
 	}
-	MYSQLI_FETCH_RESOURCE(result, MYSQL_RES *, mysql_result, "mysqli_result", MYSQLI_STATUS_VALID);
+	MYSQLI_FETCH_RESOURCE(result, MYSQL_RES*, mysql_result, "mysqli_result", MYSQLI_STATUS_VALID);
 
-	if (mode < MYSQLI_ASSOC || mode > MYSQLI_COLUMN) {
+	if (mode < MYSQLI_ASSOC || mode > MYSQLI_CLASS) {
 		zend_argument_value_error(ERROR_ARG_POS(2), "must be one of MYSQLI_NUM, MYSQLI_ASSOC, or MYSQLI_BOTH");
 		RETURN_THROWS();
 	}
+	fetchtype = mode;
 
-	if (argument && MYSQLI_COLUMN==mode) {
-		if(Z_TYPE(argument) != IS_LONG) {
-			col_no = Z_LVAL_P(argument);
-			if(col_no < 0 || col_no >= mysql_num_fields(result)) {
+	if (MYSQLI_COLUMN == mode) {
+		if (argument) {
+			if (Z_TYPE_P(argument) == IS_LONG) {
+				col_no = Z_LVAL_P(argument);
+				if (col_no < 0 || col_no >= mysql_num_fields(result)) {
+					zend_argument_value_error(ERROR_ARG_POS(3), "must be a valid column index");
+					RETURN_THROWS();
+				}
+			} else {
 				zend_argument_value_error(ERROR_ARG_POS(3), "must be a valid column index");
 				RETURN_THROWS();
 			}
+		}
+		fetchtype = MYSQLI_NUM;
+	}
+
+	if (MYSQLI_CLASS == mode) {
+		if (argument) {
+			if (Z_TYPE_P(argument) == IS_STRING) {
+				ce = zend_fetch_class(Z_STR_P(argument), ZEND_FETCH_CLASS_AUTO);
+			} else {
+				zend_argument_value_error(ERROR_ARG_POS(3), "must be a valid class name");
+				RETURN_THROWS();
+			}
 		} else {
-			zend_argument_value_error(ERROR_ARG_POS(3), "must be a valid column index");
+			ce = zend_standard_class_def;
+		}
+		if (UNEXPECTED(ce->ce_flags & (ZEND_ACC_INTERFACE | ZEND_ACC_TRAIT | ZEND_ACC_IMPLICIT_ABSTRACT_CLASS | ZEND_ACC_EXPLICIT_ABSTRACT_CLASS))) {
+			zend_throw_error(NULL, "Class %s cannot be instantiated", ZSTR_VAL(ce->name));
 			RETURN_THROWS();
 		}
+		fetchtype = MYSQLI_ASSOC;
 	}
 
 	array_init_size(return_value, mysql_num_rows(result));
@@ -506,7 +530,7 @@ PHP_FUNCTION(mysqli_fetch_all)
 	zend_ulong i = 0;
 	do {
 		zval row;
-		php_mysqli_fetch_into_hash_aux(&row, result, (MYSQLI_COLUMN==mode ? MYSQLI_NUM : mode));
+		php_mysqli_fetch_into_hash_aux(&row, result, fetchtype);
 		if (Z_TYPE(row) != IS_ARRAY) {
 			zval_ptr_dtor_nogc(&row);
 			break;
@@ -517,6 +541,9 @@ PHP_FUNCTION(mysqli_fetch_all)
 			zval_ptr_dtor_nogc(&row);
 			add_index_zval(return_value, i++, &column);
 		} else {
+			if (mode == MYSQLI_CLASS) {
+				php_mysqli_fetch_into_object(execute_data, &row, ce, NULL);
+			}
 			add_index_zval(return_value, i++, &row);
 		}
 	} while (1);

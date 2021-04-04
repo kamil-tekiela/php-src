@@ -50,6 +50,7 @@ extern void php_mysqli_dtor_p_elements(void *data);
 extern void php_mysqli_close(MY_MYSQL * mysql, int close_type, int resource_status);
 
 extern void php_mysqli_fetch_into_hash(INTERNAL_FUNCTION_PARAMETERS, int override_flag, int into_object);
+extern void php_mysqli_fetch_into_object(INTERNAL_FUNCTION_PARAMETERS, zend_class_entry *ce, zval *ctor_params);
 extern void php_clear_stmt_bind(MY_STMT *stmt);
 extern void php_clear_mysql(MY_MYSQL *);
 #ifdef MYSQLI_USE_MYSQLND
@@ -105,6 +106,7 @@ PHP_MYSQLI_EXPORT(zend_object *) mysqli_objects_new(zend_class_entry *);
 #define MYSQLI_NUM		2
 #define MYSQLI_BOTH		3
 #define MYSQLI_COLUMN		4
+#define MYSQLI_CLASS		5
 
 /* fetch types */
 #define FETCH_SIMPLE		1

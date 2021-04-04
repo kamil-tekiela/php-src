@@ -652,6 +652,7 @@ PHP_MINIT_FUNCTION(mysqli)
 	REGISTER_LONG_CONSTANT("MYSQLI_NUM", MYSQLI_NUM, CONST_CS | CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("MYSQLI_BOTH", MYSQLI_BOTH, CONST_CS | CONST_PERSISTENT);
 	REGISTER_LONG_CONSTANT("MYSQLI_COLUMN", MYSQLI_COLUMN, CONST_CS | CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("MYSQLI_CLASS", MYSQLI_CLASS, CONST_CS | CONST_PERSISTENT);
 
 	/* for mysqli_stmt_set_attr */
 	REGISTER_LONG_CONSTANT("MYSQLI_STMT_ATTR_UPDATE_MAX_LENGTH", STMT_ATTR_UPDATE_MAX_LENGTH, CONST_CS | CONST_PERSISTENT);
@@ -1137,51 +1138,58 @@ void php_mysqli_fetch_into_hash(INTERNAL_FUNCTION_PARAMETERS, int override_flags
 	php_mysqli_fetch_into_hash_aux(return_value, result, fetchtype);
 
 	if (into_object && Z_TYPE_P(return_value) == IS_ARRAY) {
-		zval dataset, retval;
-		zend_fcall_info fci;
-		zend_fcall_info_cache fcc;
+		php_mysqli_fetch_into_object(INTERNAL_FUNCTION_PARAM_PASSTHRU, ce, ctor_params);
+	}
+}
+/* }}} */
 
-		ZVAL_COPY_VALUE(&dataset, return_value);
+/* {{{ php_mysqli_fetch_into_hash */
+void php_mysqli_fetch_into_object(INTERNAL_FUNCTION_PARAMETERS, zend_class_entry *ce, zval *ctor_params)
+{
+	zval dataset, retval;
+	zend_fcall_info fci;
+	zend_fcall_info_cache fcc;
 
-		object_init_ex(return_value, ce);
-		if (!ce->default_properties_count && !ce->__set) {
-			Z_OBJ_P(return_value)->properties = Z_ARR(dataset);
+	ZVAL_COPY_VALUE(&dataset, return_value);
+
+	object_init_ex(return_value, ce);
+	if (!ce->default_properties_count && !ce->__set) {
+		Z_OBJ_P(return_value)->properties = Z_ARR(dataset);
+	} else {
+		zend_merge_properties(return_value, Z_ARRVAL(dataset));
+		zval_ptr_dtor(&dataset);
+	}
+
+	if (ce->constructor) {
+		fci.size = sizeof(fci);
+		ZVAL_UNDEF(&fci.function_name);
+		fci.object = Z_OBJ_P(return_value);
+		fci.retval = &retval;
+		fci.params = NULL;
+		fci.param_count = 0;
+		fci.named_params = NULL;
+
+		if (ctor_params) {
+			if (zend_fcall_info_args(&fci, ctor_params) == FAILURE) {
+				ZEND_UNREACHABLE();
+			}
+		}
+
+		fcc.function_handler = ce->constructor;
+		fcc.called_scope = Z_OBJCE_P(return_value);
+		fcc.object = Z_OBJ_P(return_value);
+
+		if (zend_call_function(&fci, &fcc) == FAILURE) {
+			zend_throw_exception_ex(zend_ce_exception, 0, "Could not execute %s::%s()", ZSTR_VAL(ce->name), ZSTR_VAL(ce->constructor->common.function_name));
 		} else {
-			zend_merge_properties(return_value, Z_ARRVAL(dataset));
-			zval_ptr_dtor(&dataset);
+			zval_ptr_dtor(&retval);
 		}
-
-		if (ce->constructor) {
-			fci.size = sizeof(fci);
-			ZVAL_UNDEF(&fci.function_name);
-			fci.object = Z_OBJ_P(return_value);
-			fci.retval = &retval;
-			fci.params = NULL;
-			fci.param_count = 0;
-			fci.named_params = NULL;
-
-			if (ctor_params) {
-				if (zend_fcall_info_args(&fci, ctor_params) == FAILURE) {
-					ZEND_UNREACHABLE();
-				}
-			}
-
-			fcc.function_handler = ce->constructor;
-			fcc.called_scope = Z_OBJCE_P(return_value);
-			fcc.object = Z_OBJ_P(return_value);
-
-			if (zend_call_function(&fci, &fcc) == FAILURE) {
-				zend_throw_exception_ex(zend_ce_exception, 0, "Could not execute %s::%s()", ZSTR_VAL(ce->name), ZSTR_VAL(ce->constructor->common.function_name));
-			} else {
-				zval_ptr_dtor(&retval);
-			}
-			zend_fcall_info_args_clear(&fci, 1);
-		} else if (ctor_params && zend_hash_num_elements(Z_ARRVAL_P(ctor_params)) > 0) {
-			zend_argument_error(zend_ce_exception, ERROR_ARG_POS(3),
-				"must be empty when the specified class (%s) does not have a constructor",
-				ZSTR_VAL(ce->name)
-			);
-		}
+		zend_fcall_info_args_clear(&fci, 1);
+	} else if (ctor_params && zend_hash_num_elements(Z_ARRVAL_P(ctor_params)) > 0) {
+		zend_argument_error(zend_ce_exception, ERROR_ARG_POS(3),
+			"must be empty when the specified class (%s) does not have a constructor",
+			ZSTR_VAL(ce->name)
+		);
 	}
 }
 /* }}} */
