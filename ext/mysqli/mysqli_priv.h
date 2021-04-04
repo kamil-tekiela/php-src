@@ -104,6 +104,7 @@ PHP_MYSQLI_EXPORT(zend_object *) mysqli_objects_new(zend_class_entry *);
 #define MYSQLI_ASSOC	1
 #define MYSQLI_NUM		2
 #define MYSQLI_BOTH		3
+#define MYSQLI_COLUMN		4
 
 /* fetch types */
 #define FETCH_SIMPLE		1
