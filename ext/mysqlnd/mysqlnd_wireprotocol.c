@@ -468,7 +468,7 @@ php_mysqlnd_greet_read(MYSQLND_CONN_DATA * conn, void * _packet)
 
 	DBG_RETURN(PASS);
 premature_end:
-	DBG_ERR_FMT("GREET packet %zu bytes shorter than expected", p - begin - packet->header.size);
+	SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 	php_error_docref(NULL, E_WARNING, "GREET packet %zu bytes shorter than expected",
 					 p - begin - packet->header.size);
 	DBG_RETURN(FAIL);
@@ -726,7 +726,7 @@ php_mysqlnd_auth_response_read(MYSQLND_CONN_DATA * conn, void * _packet)
 
 	DBG_RETURN(PASS);
 premature_end:
-	DBG_ERR_FMT("OK packet %zu bytes shorter than expected", p - begin - packet->header.size);
+	SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 	php_error_docref(NULL, E_WARNING, "AUTH_RESPONSE packet %zu bytes shorter than expected",
 					 p - begin - packet->header.size);
 	DBG_RETURN(FAIL);
@@ -863,7 +863,7 @@ php_mysqlnd_ok_read(MYSQLND_CONN_DATA * conn, void * _packet)
 
 	DBG_RETURN(PASS);
 premature_end:
-	DBG_ERR_FMT("OK packet %zu bytes shorter than expected", p - begin - packet->header.size);
+	SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 	php_error_docref(NULL, E_WARNING, "OK packet %zu bytes shorter than expected",
 					 p - begin - packet->header.size);
 	DBG_RETURN(FAIL);
@@ -950,7 +950,7 @@ php_mysqlnd_eof_read(MYSQLND_CONN_DATA * conn, void * _packet)
 
 	DBG_RETURN(PASS);
 premature_end:
-	DBG_ERR_FMT("EOF packet %zu bytes shorter than expected", p - begin - packet->header.size);
+	SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 	php_error_docref(NULL, E_WARNING, "EOF packet %zu bytes shorter than expected",
 					 p - begin - packet->header.size);
 	DBG_RETURN(FAIL);
@@ -1110,7 +1110,7 @@ php_mysqlnd_rset_header_read(MYSQLND_CONN_DATA * conn, void * _packet)
 
 	DBG_RETURN(ret);
 premature_end:
-	DBG_ERR_FMT("RSET_HEADER packet %zu bytes shorter than expected", p - begin - packet->header.size);
+	SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 	php_error_docref(NULL, E_WARNING, "RSET_HEADER packet %zu bytes shorter than expected",
 					 p - begin - packet->header.size);
 	DBG_RETURN(FAIL);
@@ -1188,7 +1188,7 @@ php_mysqlnd_rset_field_read(MYSQLND_CONN_DATA * conn, void * _packet)
 		DBG_RETURN(PASS);
 	} else if (EODATA_MARKER == *p && packet->header.size < 8) {
 		/* Premature EOF. That should be COM_FIELD_LIST. But we don't support COM_FIELD_LIST anymore, thus this should not happen */
-		DBG_ERR("Premature EOF. That should be COM_FIELD_LIST");
+		SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 		php_error_docref(NULL, E_WARNING, "Premature EOF in result field metadata");
 		DBG_RETURN(FAIL);
 	}
@@ -1204,12 +1204,11 @@ php_mysqlnd_rset_field_read(MYSQLND_CONN_DATA * conn, void * _packet)
 
 	/* 1 byte length */
 	if (UNEXPECTED(12 != *p)) {
-		DBG_ERR_FMT("Protocol error. Server sent false length. Expected 12 got %d", (int) *p);
+		SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 		php_error_docref(NULL, E_WARNING, "Protocol error. Server sent false length. Expected 12");
 	}
 
 	if ((size_t)((p - begin) + 12) > packet->header.size) {
-		php_error_docref(NULL, E_WARNING, "Premature end of data (mysqlnd_wireprotocol.c:%u)", __LINE__);
 		goto premature_end;
 	}
 
@@ -1315,12 +1314,12 @@ php_mysqlnd_rset_field_read(MYSQLND_CONN_DATA * conn, void * _packet)
 	DBG_RETURN(PASS);
 
 faulty_or_fake:
-	DBG_ERR_FMT("Protocol error. Server sent NULL_LENGTH. The server is faulty");
+	SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 	php_error_docref(NULL, E_WARNING, "Protocol error. Server sent NULL_LENGTH."
 					 " The server is faulty");
 	DBG_RETURN(FAIL);
 premature_end:
-	DBG_ERR_FMT("RSET field packet %zu bytes shorter than expected", p - begin - packet->header.size);
+	SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 	php_error_docref(NULL, E_WARNING, "Result set field packet %zu bytes "
 			 		"shorter than expected", p - begin - packet->header.size);
 	DBG_RETURN(FAIL);
@@ -1844,7 +1843,7 @@ php_mysqlnd_prepare_read(MYSQLND_CONN_DATA * conn, void * _packet)
 
 	DBG_RETURN(PASS);
 premature_end:
-	DBG_ERR_FMT("PREPARE packet %zu bytes shorter than expected", p - begin - packet->header.size);
+	SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 	php_error_docref(NULL, E_WARNING, "PREPARE packet %zu bytes shorter than expected",
 					 p - begin - packet->header.size);
 	DBG_RETURN(FAIL);
@@ -1914,7 +1913,7 @@ php_mysqlnd_chg_user_read(MYSQLND_CONN_DATA * conn, void * _packet)
 
 	DBG_RETURN(PASS);
 premature_end:
-	DBG_ERR_FMT("CHANGE_USER packet %zu bytes shorter than expected", p - begin - packet->header.size);
+	SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 	php_error_docref(NULL, E_WARNING, "CHANGE_USER packet %zu bytes shorter than expected",
 						 p - begin - packet->header.size);
 	DBG_RETURN(FAIL);
@@ -1998,7 +1997,7 @@ php_mysqlnd_sha256_pk_request_response_read(MYSQLND_CONN_DATA * conn, void * _pa
 	DBG_RETURN(PASS);
 
 premature_end:
-	DBG_ERR_FMT("OK packet %zu bytes shorter than expected", p - begin - packet->header.size);
+	SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 	php_error_docref(NULL, E_WARNING, "SHA256_PK_REQUEST_RESPONSE packet %zu bytes shorter than expected",
 					 p - begin - packet->header.size);
 	DBG_RETURN(FAIL);
@@ -2111,7 +2110,7 @@ php_mysqlnd_cached_sha2_result_read(MYSQLND_CONN_DATA * conn, void * _packet)
 	DBG_RETURN(PASS);
 
 premature_end:
-	DBG_ERR_FMT("OK packet %zu bytes shorter than expected", p - begin - packet->header.size);
+	SET_CLIENT_ERROR(error_info, CR_MALFORMED_PACKET, UNKNOWN_SQLSTATE, "Malformed packet");
 	php_error_docref(NULL, E_WARNING, "SHA256_PK_REQUEST_RESPONSE packet %zu bytes shorter than expected",
 					 p - begin - packet->header.size);
 	DBG_RETURN(FAIL);
